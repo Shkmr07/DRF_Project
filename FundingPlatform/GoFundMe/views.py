@@ -6,19 +6,17 @@ from django.contrib.auth.models import User
 from .serializers import UserSerializer
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate,logout
 from rest_framework.exceptions import AuthenticationFailed
-import jwt,datetime
-# class CampaignViewSet(viewsets.ModelViewSet):
-#     queryset = Campaign.objects.all()
-#     serializer_class = CampaignSerializer
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated,AllowAny
 
-# class DonationViewSet(viewsets.ModelViewSet):
-#     queryset = Donation.objects.all()
-#     serializer_class = DonationSerializer
+import jwt,datetime
+
+
 
 class RegisterView(APIView):
-
+    permission_classes= [AllowAny]
     def post(self,request):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
@@ -27,7 +25,7 @@ class RegisterView(APIView):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
 class LoginView(APIView):
-
+    permission_classes = [AllowAny]
     def post(self,request):
 
         username = request.data.get('username')
@@ -44,8 +42,19 @@ class LoginView(APIView):
         response.data = {'message': 'Login Sucessfull','token' : token}
         return response
 
+class LogoutView(APIView):
 
-    
+    def post(self,request):
+        logout(request)
+        response = Response()
+        response.delete_cookie('jwtToken')
+        response.data = {'message' : 'Logout Sucessfully'}
+        return response
+
+
+class CampaignList(generics.ListAPIView):
+    queryset = Campaign.objects.all()
+    serializer_class = CampaignSerializer 
         
         
     
