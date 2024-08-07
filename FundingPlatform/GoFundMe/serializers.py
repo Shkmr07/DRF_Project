@@ -5,7 +5,8 @@ from django.contrib.auth.models import User
 class CampaignSerializer(serializers.ModelSerializer):
     class Meta:
         model = Campaign
-        fields = '__all__'
+        exclude = ['owner']
+        
 
 class DonationSerializer(serializers.ModelSerializer):
     class Meta:

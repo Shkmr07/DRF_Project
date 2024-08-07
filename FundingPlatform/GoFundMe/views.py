@@ -35,7 +35,7 @@ class LoginView(APIView):
 
         if not user: raise AuthenticationFailed('Unauthorized')
 
-        payload = {'id' : user.id, 'exp' : datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=5)}
+        payload = {'id' : user.id, 'exp' : datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=60)}
         token = jwt.encode(payload,'cap004',algorithm='HS256')
         response = Response()
         response.set_cookie(key='jwtToken',value=token)
@@ -50,6 +50,54 @@ class LogoutView(APIView):
         response.delete_cookie('jwtToken')
         response.data = {'message' : 'Logout Sucessfully'}
         return response
+
+
+class CampaignView(APIView):
+
+    def post(self,request):
+
+        token = request.COOKIES.get('jwtToken')
+        payload = jwt.decode(token,'cap004',algorithms=['HS256'])
+        user = User.objects.get(id=payload['id'])
+
+        serializer = CampaignSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.validated_data['owner'] = user
+            serializer.save()
+            return Response({'message': 'Campaign Added Sucessfull', 'data': serializer.data},status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self,request,*args, **kwargs):
+
+        
+        token = request.COOKIES.get('jwtToken')
+        payload = jwt.decode(token,'cap004',algorithms=['HS256'])
+        user = User.objects.get(id=payload['id'])
+
+        campaign_id = kwargs.get('pk')
+        campaign = Campaign.objects.get(id=campaign_id)
+
+        serializer = CampaignSerializer(campaign,data=request.data,partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Campaign Updated Sucessfull', 'data': serializer.data},status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+    
+
+    def delete(self,request,*args, **kwargs):
+
+        token = request.COOKIES.get('jwtToken')
+        payload = jwt.decode(token,'cap004',algorithms=['HS256'])
+        user = User.objects.get(id=payload['id'])
+
+        campaign_id = kwargs.get('pk')
+        campaign = Campaign.objects.get(id=campaign_id)
+        campaign.delete()
+        return Response({'message': 'Campaign Deleted Sucessfully'},status=status.HTTP_204_NO_CONTENT)
+    
+
+        
 
 
 class CampaignList(generics.ListAPIView):
