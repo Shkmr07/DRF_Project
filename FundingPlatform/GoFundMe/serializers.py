@@ -11,7 +11,7 @@ class CampaignSerializer(serializers.ModelSerializer):
 class DonationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Donation
-        fields = '__all__'
+        exclude = ['donor']
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

@@ -57,6 +57,8 @@ class CampaignView(APIView):
     def post(self,request):
 
         token = request.COOKIES.get('jwtToken')
+
+        if not token : return Response({'message': 'Try to Login First'})
         payload = jwt.decode(token,'cap004',algorithms=['HS256'])
         user = User.objects.get(id=payload['id'])
 
@@ -71,6 +73,7 @@ class CampaignView(APIView):
 
         
         token = request.COOKIES.get('jwtToken')
+        if not token : return Response({'message': 'Try to Login First'})
         payload = jwt.decode(token,'cap004',algorithms=['HS256'])
         user = User.objects.get(id=payload['id'])
 
@@ -88,6 +91,7 @@ class CampaignView(APIView):
     def delete(self,request,*args, **kwargs):
 
         token = request.COOKIES.get('jwtToken')
+        if not token : return Response({'message': 'Try to Login First'})
         payload = jwt.decode(token,'cap004',algorithms=['HS256'])
         user = User.objects.get(id=payload['id'])
 
@@ -97,12 +101,80 @@ class CampaignView(APIView):
         return Response({'message': 'Campaign Deleted Sucessfully'},status=status.HTTP_204_NO_CONTENT)
     
 
+
+class DonationView(APIView):
+
+    def post(self,request):
+
+        token = request.COOKIES.get('jwtToken')
+        if not token : return Response({'message': 'Try to Login First'})
+        payload = jwt.decode(token,'cap004',algorithms=['HS256'])
+        user = User.objects.get(id=payload['id'])
+        campaign_owner = Campaign.objects.get(id=request.data['campaign'])
+
+        if campaign_owner.owner.username == user.username: return Response({'message': 'Campaign owner is not allow for Donate'},status=status.HTTP_401_UNAUTHORIZED)
+        serializer = DonationSerializer(data=request.data)
+        campaign = Campaign.objects.get(id=request.data['campaign']) 
+        campaign.current_amount += int(request.data['amount'])
+        campaign.save()
+
+        if serializer.is_valid():
+            serializer.validated_data['donor'] = user
+            serializer.save()
+            return Response({'message': 'Donation Added Successfully', 'data': serializer.data},status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+    
+
+    def put(self,request,*args, **kwargs):
+
+        token = request.COOKIES.get('jwtToken')
+        if not token : return Response({'message': 'Try to Login First'})
+        payload = jwt.decode(token,'cap004',algorithms=['HS256'])
+        user = User.objects.get(id=payload['id'])
+
+        donation_id = kwargs.get('pk')
+        donation = Donation.objects.get(id=donation_id)
+        serializer = DonationSerializer(donation,data=request.data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Donation Updated Successfully', 'data': serializer.data},status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self,request,*args, **kwargs):
         
+        token = request.COOKIES.get('jwtToken')
+        if not token : return Response({'message': 'Try to Login First'})
+        payload = jwt.decode(token,'cap004',algorithms=['HS256'])
+        user = User.objects.get(id=payload['id'])
+
+        donation_id = kwargs.get('pk')
+        donation = Donation.objects.get(id=donation_id)
+
+        donation.delete()
+        return Response({'message': 'Donation Deleted Sucessfully'},status=status.HTTP_204_NO_CONTENT)
+        
+        
+    
+
+
+
 
 
 class CampaignList(generics.ListAPIView):
     queryset = Campaign.objects.all()
     serializer_class = CampaignSerializer 
+
+
+class DonationList(generics.ListAPIView):
+    queryset = Donation.objects.all()
+    serializer_class = DonationSerializer
+
+
+
+
+
+    
+
         
         
     
