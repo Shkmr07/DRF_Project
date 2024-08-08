@@ -17,12 +17,7 @@ schema_view = get_schema_view(
     public=True,
     permission_classes=(permissions.AllowAny,),
 )
-# from rest_framework.routers import DefaultRouter
-# from .views import CampaignViewSet, DonationViewSet
 
-# router = DefaultRouter()
-# router.register(r'campaigns', CampaignViewSet)
-# router.register(r'donations', DonationViewSet)
 
 urlpatterns = [
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

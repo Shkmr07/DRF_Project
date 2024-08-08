@@ -10,6 +10,7 @@ from django.contrib.auth import authenticate,logout
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated,AllowAny
+from rest_framework.pagination import PageNumberPagination
 
 
 import jwt,datetime
@@ -22,7 +23,7 @@ class RegisterView(APIView):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'message': 'Signup Sucessfull','data': serializer.data},status=status.HTTP_201_CREATED)
+            return Response({'message': 'Signup Successfully','data': serializer.data},status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
 class LoginView(APIView):
@@ -40,7 +41,7 @@ class LoginView(APIView):
         token = jwt.encode(payload,'cap004',algorithm='HS256')
         response = Response()
         response.set_cookie(key='jwtToken',value=token)
-        response.data = {'message': 'Login Sucessfull','token' : token}
+        response.data = {'message': 'Login Successfully','token' : token}
         return response
 
 class LogoutView(APIView):
@@ -49,7 +50,7 @@ class LogoutView(APIView):
         logout(request)
         response = Response()
         response.delete_cookie('jwtToken')
-        response.data = {'message' : 'Logout Sucessfully'}
+        response.data = {'message' : 'Logout Successfully'}
         return response
 
 
@@ -67,7 +68,7 @@ class CampaignView(APIView):
         if serializer.is_valid():
             serializer.validated_data['owner'] = user
             serializer.save()
-            return Response({'message': 'Campaign Added Sucessfull', 'data': serializer.data},status=status.HTTP_201_CREATED)
+            return Response({'message': 'Campaign Added Successfully', 'data': serializer.data},status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
     def put(self,request,*args, **kwargs):
@@ -85,7 +86,7 @@ class CampaignView(APIView):
 
         if serializer.is_valid():
             serializer.save()
-            return Response({'message': 'Campaign Updated Sucessfull', 'data': serializer.data},status=status.HTTP_201_CREATED)
+            return Response({'message': 'Campaign Updated Successfully', 'data': serializer.data},status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
 
@@ -99,7 +100,7 @@ class CampaignView(APIView):
         campaign_id = kwargs.get('pk')
         campaign = Campaign.objects.get(id=campaign_id)
         campaign.delete()
-        return Response({'message': 'Campaign Deleted Sucessfully'},status=status.HTTP_204_NO_CONTENT)
+        return Response({'message': 'Campaign Deleted Successfully'},status=status.HTTP_204_NO_CONTENT)
     
 
 
@@ -154,21 +155,37 @@ class DonationView(APIView):
         donation.delete()
         return Response({'message': 'Donation Deleted Sucessfully'},status=status.HTTP_204_NO_CONTENT)
         
+
+
+class CampaignPage(PageNumberPagination):
+
+    page_size = 1
+    page_query_param = 'page_size'
+    max_page_size = 10
+
+
+class DonationPage(PageNumberPagination):
+
+    page_size = 1
+    page_query_param = 'page_size'
+    max_page_size = 10
         
     
-
-
-
-
-
 class CampaignList(generics.ListAPIView):
     queryset = Campaign.objects.all()
     serializer_class = CampaignSerializer 
+    pagination_class = CampaignPage
 
 
 class DonationList(generics.ListAPIView):
     queryset = Donation.objects.all()
     serializer_class = DonationSerializer
+    pagination_class = DonationPage
+
+
+
+
+
 
 
 
